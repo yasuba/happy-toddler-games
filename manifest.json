@@ -2,7 +2,7 @@
   "name": "Happy Toddler Games",
   "short_name": "happy",
   "description": "A cosy little game app",
-  "start_url": "/baby-games/",
+  "start_url": "/happy-toddler-games/",
   "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#FAEEDA",

@@ -1,11 +1,12 @@
-const CACHE_NAME = 'app-v1';
+const BASE = self.location.pathname.replace(/\/sw\.js$/, '');
+const CACHE_NAME = 'happy-toddler-games-v1';
 
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/assets/icons/icon-192.png',
-  '/assets/icons/icon-512.png',
+  BASE + '/',
+  BASE + '/index.html',
+  BASE + '/manifest.json',
+  BASE + '/assets/icons/icon-192.png',
+  BASE + '/assets/icons/icon-512.png',
 ];
 
 // Install — cache core assets
