@@ -1,0 +1,25 @@
+{
+  "name": "Happy Toddler Games",
+  "short_name": "happy",
+  "description": "A cosy little game app",
+  "start_url": "/happy-toddler-games/",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#FAEEDA",
+  "theme_color": "#FAEEDA",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
+
