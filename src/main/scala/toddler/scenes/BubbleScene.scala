@@ -4,6 +4,7 @@ import indigo.*
 import indigo.scenes.*
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{global => g}
+import toddler.models.*
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -183,39 +184,6 @@ final case class PanelState(colorIdx: Int, gauge: Double)
 
 object PanelState:
   val initial: PanelState = PanelState(colorIdx = 0, gauge = 1.0)
-
-// ── Model ────────────────────────────────────────────────────────────────────
-
-final case class Model(
-  panel:       PanelState,
-  viewport:    Size,
-  bubbles:     List[Bubble],
-  nextId:      Int,
-  counter:     Int,
-  celebration: Option[Celebration],
-  letters:     LettersState,
-  homeScreen:  HomeScreenState,
-  chickens:         List[ChickenState],
-  chickenEggs:      List[Egg],
-  chickenEggsTotal: Int,              // running total, never resets
-  nextChickenId:    Int               // monotonic id counter for new chickens
-)
-
-object Model:
-  val initial: Model = Model(
-    panel             = PanelState.initial,
-    viewport          = Size(800, 600),
-    bubbles           = List.empty,
-    nextId            = 0,
-    counter           = 0,
-    celebration       = None,
-    letters           = LettersState.initial,
-    homeScreen        = HomeScreenState.initial,
-    chickens          = List(ChickenState.initial),
-    chickenEggs       = List.empty,
-    chickenEggsTotal  = 0,
-    nextChickenId     = 1
-  )
 
 // ── Scene ────────────────────────────────────────────────────────────────────
 

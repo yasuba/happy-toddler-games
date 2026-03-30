@@ -2,6 +2,8 @@ package toddler.scenes
 
 import indigo.*
 import indigo.scenes.*
+import toddler.models.*
+import toddler.scenes.BunnyScene
 
 // ── Home screen state ─────────────────────────────────────────────────────────
 
@@ -32,17 +34,21 @@ object HomeScene extends Scene[Unit, Model, Unit]:
   // ── Card definitions (in order: 0=Bubbles, 1=Letters, 2=ComingSoon) ─────────
 
   private val cardBg: List[RGBA] = List(
-    RGBA(0.882, 0.961, 0.933, 1.0),  // #E1F5EE  mint-tinted
-    RGBA(0.980, 0.933, 0.855, 1.0),  // #FAEEDA  amber/peach
-    RGBA(0.980, 0.918, 0.886, 1.0)   // warm peach for chicken
+    RGBA(0.882, 0.961, 0.933, 1.0),  // mint-tinted   — bubbles
+    RGBA(0.980, 0.933, 0.855, 1.0),  // amber/peach   — letters
+    RGBA(0.980, 0.918, 0.886, 1.0),  // warm peach    — chicken
+    RGBA(0.980, 0.918, 0.886, 1.0),  // warm peach    — tictactoe
+    RGBA(0.965, 0.933, 0.973, 1.0)   // soft lavender — bunny
   )
 
-  private val cardLabel: List[String] = List("bubbles", "letters", "mrs chicken")
+  private val cardLabel: List[String] = List("bubbles", "letters", "mrs chicken", "tictactoe", "bunny")
 
   private val cardTarget: List[Option[SceneName]] = List(
     Some(FloatingCircleScene.name),
     Some(LettersScene.name),
-    Some(ChickenScene.name)
+    Some(ChickenScene.name),
+    Some(TictactoeScene.name),
+    Some(BunnyScene.name)
   )
 
   // ── Update ────────────────────────────────────────────────────────────────
@@ -88,7 +94,7 @@ object HomeScene extends Scene[Unit, Model, Unit]:
         case Some(startX) =>
           val W      = model.viewport.width.toDouble
           val delta  = startX - e.position.x.toDouble   // +ve = swipe left = go to next card
-          val clampX = (model.homeScreen.activeCard * W + delta).max(0.0).min(2.0 * W)
+          val clampX = (model.homeScreen.activeCard * W + delta).max(0.0).min(4.0 * W)
           Outcome(model.copy(homeScreen = model.homeScreen.copy(stripX = clampX)))
 
     case e: PointerEvent.PointerUp =>
@@ -121,7 +127,7 @@ object HomeScene extends Scene[Unit, Model, Unit]:
                   Outcome(model.copy(homeScreen = hs1))
           else
             // ── Swipe ───────────────────────────────────────────────────────
-            val newCard = if delta > 0.0 then (hs.activeCard + 1).min(2)
+            val newCard = if delta > 0.0 then (hs.activeCard + 1).min(4)
                           else (hs.activeCard - 1).max(0)
             Outcome(model.copy(homeScreen = hs.copy(
               dragStartX = None,
@@ -151,7 +157,7 @@ object HomeScene extends Scene[Unit, Model, Unit]:
     val nameCyRel = (cardH * 0.70).toInt   // name text top, relative to cardY
 
     // ── Cards ─────────────────────────────────────────────────────────────
-    val cardNodes: List[SceneNode] = (0 until 3).toList.flatMap: i =>
+    val cardNodes: List[SceneNode] = (0 until 5).toList.flatMap: i =>
       val slotLeft = i * bw - scrollPx   // left edge of this card's W-wide slot
       val cx       = slotLeft + cardPadH  // card left edge
       val icx      = slotLeft + bw / 2   // horizontal centre of slot
@@ -193,9 +199,25 @@ object HomeScene extends Scene[Unit, Model, Unit]:
               .withSize(Size(cardW, fontSize + 12))
               .moveTo(Point(cx, iconCy - fontSize / 2))
           )
-        case _ =>
+        case 2 =>
           // Mrs Chicken: scaled-down thumbnail using the shared draw helper
           ChickenScene.drawChicken(icx, iconCy + 10, facingRight = true, scale = 0.5)
+
+        case 3 =>
+          val fontSize = (cardH * 0.40).toInt.min(150)
+          List(
+            TextBox("TicTacToe")
+              .bold
+              .withFontSize(Pixels(fontSize))
+              .withColor(RGBA(0.388, 0.220, 0.024, 0.80))
+              .alignCenter
+              .withSize(Size(cardW, fontSize + 12))
+              .moveTo(Point(cx, iconCy - fontSize / 2))
+          )
+
+        case _ =>
+          // Bunny card: scaled-down bunny thumbnail
+          BunnyScene.drawBunny(icx, iconCy + 10, facingRight = true, scale = 0.5)
 
       // Game name
       val nameNode: SceneNode =
@@ -240,12 +262,12 @@ object HomeScene extends Scene[Unit, Model, Unit]:
         .moveTo(Point(bw - 46, 14))
 
     // ── Dot indicators (bottom-centre) ────────────────────────────────────
-    // 3 dots, gap=26px, centred on bw/2
+    // 4 dots, gap=26px, centred on bw/2
     val dotY      = bh - 46
     val dotGap    = 26
-    val dotStartX = bw / 2 - dotGap   // dot 0 at x, dot 1 at x+26, dot 2 at x+52
+    val dotStartX = bw / 2 - dotGap * 2   // 5 dots centred
     val dotColor  = RGBA(0.55, 0.50, 0.48, 1.0)
-    val dotNodes: List[SceneNode] = (0 until 3).toList.map: i =>
+    val dotNodes: List[SceneNode] = (0 until 5).toList.map: i =>
       val isActive = hs.activeCard == i
       Shape.Circle(
         Point(dotStartX + i * dotGap, dotY),

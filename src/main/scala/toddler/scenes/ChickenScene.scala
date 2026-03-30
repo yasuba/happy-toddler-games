@@ -2,8 +2,10 @@ package toddler.scenes
 
 import indigo.*
 import indigo.scenes.*
+import toddler.models.Model
+
 import scala.scalajs.js
-import scala.scalajs.js.Dynamic.{global => g}
+import scala.scalajs.js.Dynamic.global as g
 
 // ── Audio ─────────────────────────────────────────────────────────────────────
 

@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="114" fill="#FAEEDA"/>
+
+  <!-- Left ear -->
+  <ellipse cx="220" cy="133" rx="24" ry="72" fill="#8B5A3C" transform="rotate(-8 220 133)"/>
+  <ellipse cx="220" cy="136" rx="13" ry="56" fill="#C97B6B" transform="rotate(-8 220 136)"/>
+
+  <!-- Right ear -->
+  <ellipse cx="292" cy="133" rx="24" ry="72" fill="#8B5A3C" transform="rotate(8 292 133)"/>
+  <ellipse cx="292" cy="136" rx="13" ry="56" fill="#C97B6B" transform="rotate(8 292 136)"/>
+
+  <!-- Body -->
+  <ellipse cx="256" cy="350" rx="90" ry="94" fill="#8B5A3C"/>
+
+  <!-- Left arm (hanging down) -->
+  <ellipse cx="172" cy="346" rx="23" ry="52" fill="#8B5A3C" transform="rotate(13 172 346)"/>
+
+  <!-- Right arm (raised, holding spoon) -->
+  <ellipse cx="340" cy="306" rx="23" ry="52" fill="#8B5A3C" transform="rotate(36 340 306)"/>
+
+  <!-- Spoon (held in raised right arm) -->
+  <g transform="rotate(-10 362 240)">
+    <ellipse cx="362" cy="219" rx="17" ry="13" fill="#E0E0E0"/>
+    <rect x="356" y="229" width="12" height="54" rx="6" fill="#C8C8C8"/>
+  </g>
+
+  <!-- Belly -->
+  <ellipse cx="252" cy="358" rx="58" ry="74" fill="#A0704F"/>
+
+  <!-- Head -->
+  <ellipse cx="256" cy="222" rx="76" ry="72" fill="#8B5A3C"/>
+
+  <!-- Cheeks -->
+  <ellipse cx="208" cy="240" rx="24" ry="14" fill="#C97B6B" opacity="0.32"/>
+  <ellipse cx="304" cy="240" rx="24" ry="14" fill="#C97B6B" opacity="0.32"/>
+
+  <!-- Eyes -->
+  <circle cx="230" cy="212" r="14" fill="#3D1F0D"/>
+  <circle cx="278" cy="212" r="14" fill="#3D1F0D"/>
+  <!-- Eye shine -->
+  <circle cx="235" cy="206" r="5" fill="white" opacity="0.9"/>
+  <circle cx="283" cy="206" r="5" fill="white" opacity="0.9"/>
+
+  <!-- Nose -->
+  <ellipse cx="256" cy="236" rx="8" ry="6" fill="#C97B6B"/>
+
+  <!-- Mouth (happy curve) -->
+  <path d="M241,248 Q256,265 271,248" stroke="#3D1F0D" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Feet -->
+  <ellipse cx="210" cy="441" rx="34" ry="26" fill="#8B5A3C"/>
+  <ellipse cx="302" cy="443" rx="34" ry="26" fill="#8B5A3C"/>
+
+</svg>

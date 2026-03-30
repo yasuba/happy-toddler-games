@@ -3,13 +3,8 @@ package toddler
 import indigo.*
 import indigo.scenes.SceneName
 import indigo.scenes.Scene
-import toddler.scenes.HomeScene
-import toddler.scenes.SettingsScene
-import toddler.scenes.FloatingCircleScene
-import toddler.scenes.LettersScene
-import toddler.scenes.ChickenScene
-import toddler.scenes.Model
-import toddler.scenes.Music
+import toddler.scenes.{BunnyScene, ChickenScene, FloatingCircleScene, HomeScene, LettersScene, Music, SettingsScene, TictactoeScene}
+import toddler.models.Model
 
 object Main extends IndigoGame[Unit, Unit, Model, Unit] {
 
@@ -17,7 +12,7 @@ object Main extends IndigoGame[Unit, Unit, Model, Unit] {
     launch("indigo-container")
 
   override def scenes(bootData: Unit): NonEmptyList[Scene[Unit, Model, Unit]] =
-    NonEmptyList(HomeScene, LettersScene, FloatingCircleScene, SettingsScene, ChickenScene)
+    NonEmptyList(HomeScene, LettersScene, FloatingCircleScene, SettingsScene, ChickenScene, TictactoeScene, BunnyScene)
 
   override def initialScene(bootData: Unit): Option[SceneName] = Some(HomeScene.name)
 

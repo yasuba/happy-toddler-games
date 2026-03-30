@@ -2,6 +2,7 @@ package toddler.scenes
 
 import indigo.*
 import indigo.scenes.*
+import toddler.models.Model
 
 // Stub — wired for navigation only. Settings content to be built later.
 
