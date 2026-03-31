@@ -144,7 +144,9 @@ object LettersScene extends Scene[Unit, Model, Unit]:
   ): GlobalEvent => Outcome[Model] =
 
     case ViewportResize(vp) =>
-      // Also shuffle on first load so the correct card isn't always on the left
+      // Also shuffle on first load so the correct card isn't always on the left.
+      // Play the phonics for the current letter so the child hears it on entry.
+      Audio.playPhonics(LetterEntries(model.letters.letterIdx).letter)
       Outcome(model.copy(
         viewport = vp.toSize,
         letters  = model.letters.copy(cardOrder = shuffleCards(context.dice))
@@ -156,9 +158,11 @@ object LettersScene extends Scene[Unit, Model, Unit]:
         case LettersPhase.Correct(t) =>
           val next = t + context.delta.toDouble
           if next >= CorrectPauseDuration then
-            // Advance to next letter, wrapping A→Z→A
+            // Advance to next letter, wrapping A→Z→A; play phonics for the new letter
+            val newIdx = (ls.letterIdx + 1) % LetterEntries.length
+            Audio.playPhonics(LetterEntries(newIdx).letter)
             ls.copy(
-              letterIdx = (ls.letterIdx + 1) % LetterEntries.length,
+              letterIdx = newIdx,
               cardOrder = shuffleCards(context.dice),
               phase     = LettersPhase.Idle
             )
@@ -256,9 +260,8 @@ object LettersScene extends Scene[Unit, Model, Unit]:
     // Using fixed pixel values avoids cut-off from percentage rounding.
     val emojiSize = 48
     val emojiBoxH = 72   // generous height so tall emoji glyphs aren't clipped
-    val emojiPadT = 18   // gap from top of card to top of emoji box
     val wordBoxH  = 28
-    val wordPadT  = 8    // gap between bottom of emoji box and top of word
+    val wordPadT  = 8    // gap between emoji box and word
 
     // Base card content (background, emoji, word)
     val cardBases: List[SceneNode] = (0 until 3).toList.flatMap: pos =>
@@ -270,8 +273,11 @@ object LettersScene extends Scene[Unit, Model, Unit]:
       val isCorrectCard = ls.cardOrder(pos) == 0
       val (bgC, bdC)    = if isOk && isCorrectCard then (CardBgOk, CardBorderOk)
                           else (base, border)
-      val emojiY = r.y + emojiPadT
-      val wordY  = emojiY + emojiBoxH + wordPadT
+      // Centre the emoji+word block vertically within the card
+      val totalContentH = emojiBoxH + wordPadT + wordBoxH
+      val contentStartY = r.y + (r.height - totalContentH) / 2
+      val emojiY = contentStartY
+      val wordY  = contentStartY + emojiBoxH + wordPadT
       List(
         Shape.Box(r, Fill.Color(bgC), Stroke(2, bdC)),
         TextBox(info.emoji)

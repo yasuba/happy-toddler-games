@@ -13,6 +13,16 @@ import toddler.models.GameStatus.{Draw, Playing, Waiting, Won}
 import toddler.scenes.TictactoeLayout.*
 
 import scala.util.Random
+import scala.scalajs.js
+import scala.scalajs.js.Dynamic.{global => g}
+
+// ── Audio ─────────────────────────────────────────────────────────────────────
+
+object TictactoeAudio:
+  private def play(file: String): Unit =
+    val a = js.Dynamic.newInstance(g.Audio)(s"assets/sounds/$file")
+    a.play()
+  def win(): Unit = { Music.duck(0.4); play("fanfare.mp3") }
 
 object TictactoeScene extends Scene[Unit, Model, Unit] {
 
@@ -40,29 +50,43 @@ object TictactoeScene extends Scene[Unit, Model, Unit] {
       if e.position.x < 52 && e.position.y < 52 then
         Music.onSceneChange()
         Outcome(model).addGlobalEvents(SceneEvent.JumpTo(HomeScene.name))
-      else if model.tictactoe.gameStatus != Playing then Outcome(model)
       else
-        val vp = model.viewport
+        val vp   = model.viewport
         val tapX = e.position.x
         val tapY = e.position.y
-        val isInGrid = tapX >= gridX(vp) && tapX <= gridX(vp) + gridSize(vp) && tapY >= gridY(vp) && tapY <= gridY(vp) + gridSize(vp)
-
-        if(isInGrid)
-          val col = (tapX - gridX(vp)) / cellSize(vp)    // 0, 1, or 2
-          val row = (tapY - gridY(vp)) / cellSize(vp)    // 0, 1, or 2
-          val index = row * 3 + col
-
-          def alternatePlayer(player: Player): Player =
-            if (player == X) O else X
-
-          val updatedBoard = model.tictactoe.board.map {
-            case (i, p) if i == index => (i, model.tictactoe.currentPlayer)
-            case (i, p) => (i, p)
-          }
-          if (model.tictactoe.board(index) != Empty) Outcome(model)
-          else
-            Outcome(model.copy(tictactoe = model.tictactoe.copy(currentPlayer = alternatePlayer(model.tictactoe.currentPlayer), board = updatedBoard, gameStatus = updatedStatus(model.tictactoe.currentPlayer, updatedBoard))))
-        else Outcome(model)
+        model.tictactoe.gameStatus match
+          case Won(_) | Draw =>
+            // "play again?" hit area: full grid width, 20px below grid
+            val paY = gridY(vp) + gridSize(vp) + 20
+            if tapX >= gridX(vp) && tapX <= gridX(vp) + gridSize(vp) &&
+               tapY >= paY && tapY < paY + 40 then
+              Outcome(model.copy(tictactoe = TictactoeState.initial))
+            else Outcome(model)
+          case Waiting(_) => Outcome(model)
+          case Playing =>
+            val isInGrid = tapX >= gridX(vp) && tapX <= gridX(vp) + gridSize(vp) &&
+                           tapY >= gridY(vp) && tapY <= gridY(vp) + gridSize(vp)
+            if isInGrid then
+              val col   = (tapX - gridX(vp)) / cellSize(vp)
+              val row   = (tapY - gridY(vp)) / cellSize(vp)
+              val index = row * 3 + col
+              if model.tictactoe.board(index) != Empty then Outcome(model)
+              else
+                def alternatePlayer(player: Player): Player = if player == X then O else X
+                val updatedBoard = model.tictactoe.board.map {
+                  case (i, _) if i == index => (i, model.tictactoe.currentPlayer)
+                  case cell                 => cell
+                }
+                val newStatus = updatedStatus(model.tictactoe.currentPlayer, updatedBoard)
+                newStatus match
+                  case Won(_) => TictactoeAudio.win()
+                  case _      => ()
+                Outcome(model.copy(tictactoe = model.tictactoe.copy(
+                  currentPlayer = alternatePlayer(model.tictactoe.currentPlayer),
+                  board         = updatedBoard,
+                  gameStatus    = newStatus
+                )))
+            else Outcome(model)
 
     case FrameTick =>
       model.tictactoe.gameStatus match
@@ -71,7 +95,9 @@ object TictactoeScene extends Scene[Unit, Model, Unit] {
           if newTimer >= 0.8 then
             val newBoard = TicTacToeRules.easyModePlayer(model.tictactoe.board)
             val newStatus =
-              if TicTacToeRules.wins(O, newBoard) then GameStatus.Won(O)
+              if TicTacToeRules.wins(O, newBoard) then
+                TictactoeAudio.win()
+                GameStatus.Won(O)
               else if TicTacToeRules.isDraw(newBoard) then GameStatus.Draw
               else GameStatus.Playing
             Outcome(model.copy(tictactoe = model.tictactoe.copy(
@@ -94,27 +120,30 @@ object TictactoeScene extends Scene[Unit, Model, Unit] {
     val vp = model.viewport
     val bgNode: SceneNode =
       Shape.Box(Rectangle(0, 0, bw(vp), bh(vp)), Fill.Color(RGBA(0.851, 0.922, 0.957, 1.0)))
+    val gridColor = RGBA(0.545, 0.353, 0.235, 1.0)  // #8B5A3C warm brown
+    val xColor    = RGBA(0.624, 0.882, 0.796, 1.0)  // #9FE1CB mint
+    val oColor    = RGBA(0.808, 0.796, 0.965, 1.0)  // #CECBF6 lavender
+
     val gridLinesNode: List[SceneNode] =
       List(
-        Shape.Line(Point(gridX(vp)+cellSize(vp), gridY(vp)), Point(gridX(vp)+cellSize(vp), gridY(vp) + gridSize(vp)), Stroke(10)),
-        Shape.Line(Point(gridX(vp)+cellSize(vp)*2, gridY(vp)), Point(gridX(vp)+cellSize(vp)*2, gridY(vp) + gridSize(vp)), Stroke(10)),
-        Shape.Line(Point(gridX(vp), gridY(vp) + cellSize(vp)), Point(gridX(vp)+gridSize(vp), gridY(vp)+cellSize(vp)), Stroke(10)),
-        Shape.Line(Point(gridX(vp), gridY(vp) + cellSize(vp)*2), Point(gridX(vp)+gridSize(vp), gridY(vp) + cellSize(vp)*2), Stroke(10))
+        Shape.Line(Point(gridX(vp)+cellSize(vp),   gridY(vp)),            Point(gridX(vp)+cellSize(vp),   gridY(vp)+gridSize(vp)), Stroke(10, gridColor)),
+        Shape.Line(Point(gridX(vp)+cellSize(vp)*2, gridY(vp)),            Point(gridX(vp)+cellSize(vp)*2, gridY(vp)+gridSize(vp)), Stroke(10, gridColor)),
+        Shape.Line(Point(gridX(vp),                gridY(vp)+cellSize(vp)), Point(gridX(vp)+gridSize(vp), gridY(vp)+cellSize(vp)), Stroke(10, gridColor)),
+        Shape.Line(Point(gridX(vp),              gridY(vp)+cellSize(vp)*2), Point(gridX(vp)+gridSize(vp), gridY(vp)+cellSize(vp)*2), Stroke(10, gridColor))
       )
     val cellNodes: List[SceneNode] = model.tictactoe.board.flatMap { (cell, player) =>
-      val col = cell % 3
-      val row = cell / 3
+      val col         = cell % 3
+      val row         = cell / 3
       val cellCentreX = gridX(vp) + col * cellSize(vp) + cellSize(vp) / 2
       val cellCentreY = gridY(vp) + row * cellSize(vp) + cellSize(vp) / 2
-      val margin = cellSize(vp) / 4
-      player match {
+      val margin      = cellSize(vp) / 4
+      player match
         case X => List(
-          Shape.Line(Point(cellCentreX - margin, cellCentreY - margin), Point(cellCentreX + margin, cellCentreY + margin), Stroke(3)),
-          Shape.Line(Point(cellCentreX + margin, cellCentreY - margin), Point(cellCentreX - margin, cellCentreY + margin), Stroke(3))
+          Shape.Line(Point(cellCentreX - margin, cellCentreY - margin), Point(cellCentreX + margin, cellCentreY + margin), Stroke(6, xColor)),
+          Shape.Line(Point(cellCentreX + margin, cellCentreY - margin), Point(cellCentreX - margin, cellCentreY + margin), Stroke(6, xColor))
         )
-        case O => List(Shape.Circle(Point(cellCentreX, cellCentreY), cellSize(vp) / 4, Fill.None, Stroke(3)))
+        case O => List(Shape.Circle(Point(cellCentreX, cellCentreY), cellSize(vp) / 4, Fill.None, Stroke(6, oColor)))
         case Empty => List.empty
-      }
     }.toList
     val backNode: SceneNode =
       TextBox("←")
@@ -122,23 +151,31 @@ object TictactoeScene extends Scene[Unit, Model, Unit] {
         .withColor(RGBA(0.5, 0.5, 0.5, 0.65))
         .withSize(Size(40, 36))
         .moveTo(Point(8, 10))
-    val messageNode: SceneNode = {
-      val message = model.tictactoe.gameStatus match {
-        case Playing => "Your turn"
+    val messageNode: SceneNode =
+      val message = model.tictactoe.gameStatus match
+        case Playing    => "Your turn"
         case Waiting(_) => "Computer's turn"
-        case Won(player) => s"Player $player wins!"
-        case Draw => "It's a draw"
-      }
-      val msgW = bw(vp) - (gridX(vp) + gridSize(vp)) - 8
-      val msgX = gridX(vp) + gridSize(vp) + 4
-      val msgY = gridY(vp) + gridSize(vp) / 2 - 40
+        case Won(p)     => s"Player $p wins!"
+        case Draw       => "It's a draw"
       TextBox(message)
-        .withFontSize(Pixels(18))
-        .withColor(RGBA(0.35, 0.25, 0.15, 0.70))
-        .withSize(Size(msgW, 80))
-        .moveTo(Point(msgX, msgY))
-    }
-    val nodes = List(bgNode, backNode, messageNode) ::: gridLinesNode ::: cellNodes
+        .withFontSize(Pixels(20))
+        .withColor(RGBA(0.35, 0.25, 0.15, 0.80))
+        .alignCenter
+        .withSize(Size(gridSize(vp), 36))
+        .moveTo(Point(gridX(vp), gridY(vp) - 46))
+    val playAgainNodes: List[SceneNode] =
+      model.tictactoe.gameStatus match
+        case Won(_) | Draw =>
+          List(
+            TextBox("play again?")
+              .withFontSize(Pixels(20))
+              .withColor(RGBA(0.35, 0.25, 0.15, 0.65))
+              .alignCenter
+              .withSize(Size(gridSize(vp), 36))
+              .moveTo(Point(gridX(vp), gridY(vp) + gridSize(vp) + 20))
+          )
+        case _ => List.empty
+    val nodes = List(bgNode, backNode, messageNode) ::: gridLinesNode ::: cellNodes ::: playAgainNodes
     Outcome(SceneUpdateFragment(Layer(nodes*)))
   }
 }

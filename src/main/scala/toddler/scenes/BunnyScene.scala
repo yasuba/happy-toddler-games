@@ -223,7 +223,7 @@ object BunnyScene extends Scene[Unit, Model, Unit]:
         val stillOnFloor    = groundedAt >= maxY - 1.0
         val stillOnPlatform = platforms.exists { p =>
           px - BunnyBodyR < p.x + p.w && px + BunnyBodyR > p.x &&
-          (groundedAt - p.y).abs < 2.0
+          (groundedAt - (p.y - BunnyBodyR)).abs < 2.0
         }
         if !stillOnFloor && !stillOnPlatform then
           groundedAt = 0.0   // walked off edge — become airborne
@@ -247,7 +247,7 @@ object BunnyScene extends Scene[Unit, Model, Unit]:
             // crossed the platform top this frame (bunny centre was above it, now at/below)
             val crossedTop   = py >= p.y - BunnyBodyR && py - vy * dt < p.y - BunnyBodyR
             if overPlatform && crossedTop && groundedAt == 0.0 then
-              landOn(p.y)
+              landOn(p.y - BunnyBodyR)
 
       val newSquashAmount = if hardBounce then BunnyState.SquashAmt else b.squashAmount
       val newSquashTimer  = if hardBounce then 0.0
@@ -431,15 +431,19 @@ object BunnyScene extends Scene[Unit, Model, Unit]:
 
   // ── Bunny drawing ─────────────────────────────────────────────────────────────
   //
-  // All offsets relative to body centre (0,0), facing right (d=+1).
-  // xf() applies squash then tilt rotation before translating to screen coords.
+  // Translated from assets/images/bunny.svg (viewBox 0 0 220 180).
+  // All offsets are relative to the SVG body-ellipse centre (100, 112).
+  // sp() converts SVG offsets → screen Points, applying direction (d),
+  // base scale (bs = 0.75 → ~140px wide at scale=1.0), squash, and tilt.
+  // makeEllipse() approximates a rotated SVG ellipse as a 16-point polygon;
+  // rotation angle is multiplied by d internally to auto-mirror.
 
-  private val BunnyBody   = RGBA(0.545, 0.353, 0.235, 1.0)  // #8B5A3C
-  private val BunnyBelly  = RGBA(0.627, 0.439, 0.310, 1.0)  // #A0704F
-  private val EarInner    = RGBA(0.788, 0.482, 0.420, 1.0)  // #C97B6B
-  private val BunnyEye    = RGBA(0.239, 0.122, 0.051, 1.0)  // #3D1F0D
-  private val SpoonHandle = RGBA(0.784, 0.784, 0.784, 1.0)  // #C8C8C8 silver
-  private val SpoonBowl   = RGBA(0.878, 0.878, 0.878, 1.0)  // #E0E0E0 light silver
+  private val BodyColor    = RGBA(0.361, 0.200, 0.090, 1.0)  // #5C3317
+  private val ShadingColor = RGBA(0.482, 0.290, 0.173, 1.0)  // #7B4A2D
+  private val TailColor    = RGBA(0.627, 0.439, 0.310, 1.0)  // #A0704F
+  private val OutlineColor = RGBA(0.239, 0.122, 0.051, 1.0)  // #3D1F0D
+  private val SpoonHandle  = RGBA(0.784, 0.784, 0.784, 1.0)  // #C8C8C8
+  private val SpoonBowl    = RGBA(0.878, 0.878, 0.878, 1.0)  // #E0E0E0
 
   private def xf(cx: Int, cy: Int, dx: Double, dy: Double,
                   sx: Double, sy: Double, tilt: Double): Point =
@@ -453,96 +457,98 @@ object BunnyScene extends Scene[Unit, Model, Unit]:
 
   def drawBunny(
     cx: Int, cy: Int,
-    facingRight: Boolean,
-    tilt:    Double = 0.0,
-    squashX: Double = 1.0,
-    squashY: Double = 1.0,
-    scale:   Double = 1.0
+    facingRight:  Boolean,
+    tilt:         Double = 0.0,
+    squashX:      Double = 1.0,
+    squashY:      Double = 1.0,
+    scale:        Double = 1.0,
+    bounceOffset: Int    = 0,
+    earWiggle:    Double = 0.0
   ): List[SceneNode] =
-    val d  = if facingRight then 1.0 else -1.0
-    val sx = squashX * scale
-    val sy = squashY * scale
-    def p(dx: Double, dy: Double): Point = xf(cx, cy, dx, dy, sx, sy, tilt)
-    def r(n: Int): Int = (n * scale).toInt.max(1)
+    val d   = if facingRight then 1.0 else -1.0
+    val bcy = cy + bounceOffset
+    val bs  = 0.75  // base scale: SVG px → screen px at scale=1.0
 
-    // Spoon handle — drawn first, sits behind body
-    val spoonHandle = List(
-      Shape.Line(p(32*d, -28), p(44*d, -64), Stroke(r(8), SpoonHandle))
-    )
+    // Convert a raw SVG body-relative offset to a screen Point.
+    // d is applied to x here; callers pass unsigned SVG offsets.
+    def sp(svgDx: Double, svgDy: Double): Point =
+      xf(cx, bcy, svgDx * d * bs, svgDy * bs, squashX * scale, squashY * scale, tilt)
 
-    // Back foot — two overlapping circles to look wider/more oval like SVG rx=34 ry=26
-    val backFoot = List(
-      Shape.Circle(p(-17*d, 46), r(10), Fill.Color(BunnyBody)),
-      Shape.Circle(p( -7*d, 46), r(12), Fill.Color(BunnyBody))
-    )
+    def si(n: Double): Int = (n * scale * bs).toInt.max(1)
 
-    // Far (back) ear
-    val farEar = List(
-      Shape.Circle(p( 4*d, -68), r(10), Fill.Color(BunnyBody)),
-      Shape.Circle(p( 3*d, -80), r( 9), Fill.Color(BunnyBody)),
-      Shape.Circle(p( 2*d, -89), r( 8), Fill.Color(BunnyBody)),
-      Shape.Circle(p( 2*d, -97), r( 7), Fill.Color(BunnyBody)),
-      Shape.Circle(p( 4*d, -70), r( 5), Fill.Color(EarInner)),
-      Shape.Circle(p( 3*d, -82), r( 5), Fill.Color(EarInner)),
-      Shape.Circle(p( 2*d, -91), r( 4), Fill.Color(EarInner))
-    )
+    val sw = Stroke(si(2), OutlineColor)
 
-    // Body
-    val body = Shape.Circle(p(0, 0), r(36), Fill.Color(BunnyBody))
+    // Approximate a rotated SVG ellipse as a 16-point polygon.
+    // svgOx/svgOy: centre offset from body centre in raw SVG units (no d pre-applied).
+    // angleDeg: SVG rotation in degrees — flipped by d internally to auto-mirror.
+    def makeEllipse(svgOx: Double, svgOy: Double,
+                    svgRx: Double, svgRy: Double,
+                    angleDeg: Double,
+                    fill: Fill, stroke: Stroke = Stroke.None): SceneNode =
+      val ar   = angleDeg * Math.PI / 180.0 * d
+      val cosA = Math.cos(ar); val sinA = Math.sin(ar)
+      val pts  = Batch.fromList(List.tabulate(16) { i =>
+        val t  = 2 * Math.PI * i / 16
+        val ex = svgRx * Math.cos(t)
+        val ey = svgRy * Math.sin(t)
+        sp(svgOx + ex * cosA - ey * sinA,
+           svgOy + ex * sinA + ey * cosA)
+      })
+      Shape.Polygon(pts, fill, stroke)
 
-    // Tail
-    val tail = Shape.Circle(p(-28*d, 4), r(12), Fill.Color(BunnyBelly))
+    // 1. Tail: y tracks the body's rotated back end so it sits correctly in both directions.
+    //    Body back-end y ≈ 60·sin(22°)·d SVG units from centre; tail stays 26.5 SVG units above that.
+    val tailSvgY = 60.0 * Math.sin(22.0 * Math.PI / 180.0) * d - 15
+    val tail = Shape.Circle(sp(-58, tailSvgY), si(14), Fill.Color(TailColor))
 
-    // Belly
-    val belly = Shape.Circle(p(8*d, 9), r(23), Fill.Color(BunnyBelly))
+    // 2. Back legs: haunch (65,133)→(-35,21) rotate=-12; shin (30,150)→(-70,38) rotate=8
+    val backHaunch = makeEllipse(-35, 21, 30, 19, -12.0, Fill.Color(BodyColor), sw)
+    val backShin   = makeEllipse(-70, 38, 22, 11,   8.0, Fill.Color(BodyColor), sw)
 
-    // Down arm (spoon-free side)
-    val downArm = Shape.Circle(p(-24*d, 10), r(14), Fill.Color(BunnyBody))
+    // 3. Body (100,112)→(0,0) rotate=-22; belly (104,120)→(4,8) rotate=-22
+    val body  = makeEllipse(  0,  0, 60, 25, -22.0, Fill.Color(BodyColor),    sw)
+    val belly = makeEllipse(  4,  8, 36, 13, -22.0, Fill.Color(ShadingColor), Stroke.None)
 
-    // Near (front) ear
-    val nearEar = List(
-      Shape.Circle(p(16*d, -64), r(11), Fill.Color(BunnyBody)),
-      Shape.Circle(p(16*d, -76), r(10), Fill.Color(BunnyBody)),
-      Shape.Circle(p(15*d, -86), r( 9), Fill.Color(BunnyBody)),
-      Shape.Circle(p(14*d, -95), r( 8), Fill.Color(BunnyBody)),
-      Shape.Circle(p(16*d, -66), r( 6), Fill.Color(EarInner)),
-      Shape.Circle(p(16*d, -78), r( 5), Fill.Color(EarInner)),
-      Shape.Circle(p(15*d, -88), r( 5), Fill.Color(EarInner))
-    )
+    // 4. Far ear (ear-left in SVG — sits behind near ear)
+    //    Outer (152,32)→(52,-80) rx=8 ry=23 rotate=32; inner (152,33)→(52,-79) rx=4 ry=15
+    val farEarOuter = makeEllipse(52, -80,  8, 23, 32.0 + earWiggle, Fill.Color(BodyColor),    sw)
+    val farEarInner = makeEllipse(52, -79,  4, 15, 32.0 + earWiggle, Fill.Color(ShadingColor), Stroke.None)
 
-    // Head (overlaps top of body and ear bases naturally)
-    val head = Shape.Circle(p(8*d, -48), r(28), Fill.Color(BunnyBody))
+    // 5. Near ear (ear-right in SVG)
+    //    Outer (163,34)→(63,-78) rx=9 ry=25 rotate=18; inner (163,35)→(63,-77) rx=5 ry=17
+    val nearEarOuter = makeEllipse(63, -78,  9, 25, 18.0 + earWiggle, Fill.Color(BodyColor),    sw)
+    val nearEarInner = makeEllipse(63, -77,  5, 17, 18.0 + earWiggle, Fill.Color(ShadingColor), Stroke.None)
 
-    // Front foot — two overlapping circles to look wider/more oval
-    val frontFoot = List(
-      Shape.Circle(p( 9*d, 48), r(13), Fill.Color(BunnyBody)),
-      Shape.Circle(p(20*d, 48), r(15), Fill.Color(BunnyBody))
-    )
+    // 6. Head: circle (155,82)→(55,-30) r=30; nose ellipse (176,88)→(76,-24); tip dot at (93,-24)
+    val head    = Shape.Circle(sp(55, -30), si(30), Fill.Color(BodyColor))
+    val nose    = makeEllipse(76, -24, 17, 15, 0.0, Fill.Color(ShadingColor), sw)
+    val noseTip = Shape.Circle(sp(93, -24), si(3), Fill.Color(OutlineColor))
 
-    // Face — cheeks, eye, eye-shine, nose, mouth
-    val face = List(
-      // Far cheek (subtle, partially hidden behind head)
-      Shape.Circle(p(-10*d, -41), r(6),  Fill.Color(EarInner.withAlpha(0.18))),
-      // Near cheek (more visible, at front of face)
-      Shape.Circle(p( 26*d, -41), r(9),  Fill.Color(EarInner.withAlpha(0.32))),
-      // Eye
-      Shape.Circle(p(16*d, -54), r(7), Fill.Color(BunnyEye)),
-      // Eye shine
-      Shape.Circle(p(18*d, -57), r(2), Fill.Color(RGBA(1.0, 1.0, 1.0, 0.85))),
-      // Nose
-      Shape.Circle(p(21*d, -42), r(4), Fill.Color(EarInner)),
-      // Mouth — two angled lines forming a happy V-smile
-      Shape.Line(p(14*d, -37), p(19*d, -34), Stroke(r(2).max(2), BunnyEye)),
-      Shape.Line(p(19*d, -34), p(24*d, -37), Stroke(r(2).max(2), BunnyEye))
-    )
+    // 7. Front legs: upper (152,118)→(52,6) rx=25 ry=12 rotate=28;
+    //               paw   (183,136)→(83,24) rx=21 ry=10 rotate=-8
+    val frontUpper = makeEllipse(52,  6, 25, 12,  28.0, Fill.Color(BodyColor), sw)
+    val frontPaw   = makeEllipse(83, 24, 21, 10,  -8.0, Fill.Color(BodyColor), sw)
 
-    // Spoon bowl — drawn last, in front of everything
-    val spoonBowl = List(
-      Shape.Circle(p(46*d, -70), r(12), Fill.Color(SpoonBowl)),
-      Shape.Circle(p(43*d, -73), r( 6), Fill.Color(RGBA(0.70, 0.70, 0.70, 1.0)))
-    )
+    // 8. Eye: sclera (169,76)→(69,-36) r=8; pupil (171,76)→(71,-36) r=5;
+    //         shine (173,74)→(73,-38) r=2
+    val eyeSclera = Shape.Circle(sp( 69, -36), si(8), Fill.Color(RGBA(1.0, 1.0, 1.0, 1.0)))
+    val eyePupil  = Shape.Circle(sp( 71, -36), si(5), Fill.Color(OutlineColor))
+    val eyeShine  = Shape.Circle(sp( 73, -38), si(2), Fill.Color(RGBA(1.0, 1.0, 1.0, 0.75)))
 
-    spoonHandle ::: backFoot ::: farEar :::
-    List(body, tail, belly, downArm) :::
-    nearEar ::: (head :: frontFoot) :::
-    face ::: spoonBowl
+    // 9. Spoon: handle (193,130)→(93,18) to (205,98)→(105,-14);
+    //           bowl (205,94)→(105,-18) rx=10 ry=7 rotate=-20;
+    //           shade (204,93)→(104,-19) rx=5 ry=3.5 rotate=-20
+    val spoonStick = Shape.Line(sp(93, 18), sp(105, -14), Stroke(si(5).max(2), SpoonHandle))
+    val spoonBowl  = makeEllipse(105, -18, 10, 7.0, -20.0,
+                       Fill.Color(SpoonBowl), Stroke(si(2), SpoonHandle))
+    val spoonShade = makeEllipse(104, -19,  5, 3.5, -20.0,
+                       Fill.Color(SpoonHandle.withAlpha(0.6)), Stroke.None)
+
+    List(tail, backHaunch, backShin,
+         body, belly,
+         farEarOuter, farEarInner,
+         nearEarOuter, nearEarInner,
+         head, nose, noseTip,
+         frontUpper, frontPaw,
+         eyeSclera, eyePupil, eyeShine,
+         spoonStick, spoonBowl, spoonShade)

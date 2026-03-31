@@ -27,10 +27,9 @@ cp "$OPT_JS" docs/main.js
 sed 's|src="target/scala-3.3.7/toddler-calm-app-fastopt/main.js"|src="main.js"|' \
   index.html > docs/index.html
 
-echo "==> docs/ is ready"
-echo ""
-echo "GitHub Pages setup (one-time):"
-echo "  Settings -> Pages -> Source: Deploy from branch, branch: main, folder: /docs"
-echo ""
-echo "To deploy:"
-echo "  git add docs && git commit -m 'deploy' && git push"
+echo "==> Committing and pushing docs/..."
+git add docs/
+git commit -m "deploy"
+git push
+
+echo "==> Done."

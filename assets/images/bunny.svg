@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 180">
+
+  <!-- Tail: fluffy round pom behind body -->
+  <g id="tail">
+    <circle cx="42" cy="108" r="14"
+            fill="#A0704F" stroke="#3D1F0D" stroke-width="2.5"/>
+  </g>
+
+  <!-- Back legs: large haunches + extended shin/foot kicking back -->
+  <g id="back-legs">
+    <ellipse cx="65" cy="133" rx="30" ry="19"
+             fill="#5C3317" stroke="#3D1F0D" stroke-width="2.5"
+             transform="rotate(-12 65 133)"/>
+    <ellipse cx="30" cy="150" rx="22" ry="11"
+             fill="#5C3317" stroke="#3D1F0D" stroke-width="2.5"
+             transform="rotate(8 30 150)"/>
+  </g>
+
+  <!-- Body: elongated, tilted upward toward the front -->
+  <g id="body">
+    <ellipse cx="100" cy="112" rx="60" ry="25"
+             fill="#5C3317" stroke="#3D1F0D" stroke-width="2.5"
+             transform="rotate(-10 100 112)"/>
+    <!-- Belly shading -->
+    <ellipse cx="104" cy="120" rx="36" ry="13"
+             fill="#7B4A2D" stroke="none"
+             transform="rotate(-10 104 120)"/>
+  </g>
+
+  <!-- Far (left) ear: more swept back -->
+  <g id="ear-left">
+    <ellipse cx="152" cy="32" rx="8" ry="23"
+             fill="#5C3317" stroke="#3D1F0D" stroke-width="2.5"
+             transform="rotate(32 152 32)"/>
+    <ellipse cx="152" cy="33" rx="4" ry="15"
+             fill="#7B4A2D" stroke="none"
+             transform="rotate(32 152 33)"/>
+  </g>
+
+  <!-- Near (right) ear: less swept back -->
+  <g id="ear-right">
+    <ellipse cx="163" cy="34" rx="9" ry="25"
+             fill="#5C3317" stroke="#3D1F0D" stroke-width="2.5"
+             transform="rotate(18 163 34)"/>
+    <ellipse cx="163" cy="35" rx="5" ry="17"
+             fill="#7B4A2D" stroke="none"
+             transform="rotate(18 163 35)"/>
+  </g>
+
+  <!-- Head: covers ear bases -->
+  <g id="head">
+    <circle cx="155" cy="82" r="30"
+            fill="#5C3317" stroke="#3D1F0D" stroke-width="2.5"/>
+    <ellipse cx="176" cy="88" rx="5" ry="4"
+             fill="#7B4A2D" stroke="#3D1F0D" stroke-width="1.5"/>
+  </g>
+
+  <!-- Front legs: reaching forward, upper arm + lower paw -->
+  <g id="front-legs">
+    <ellipse cx="152" cy="118" rx="25" ry="12"
+             fill="#5C3317" stroke="#3D1F0D" stroke-width="2.5"
+             transform="rotate(28 152 118)"/>
+    <ellipse cx="183" cy="136" rx="21" ry="10"
+             fill="#5C3317" stroke="#3D1F0D" stroke-width="2.5"
+             transform="rotate(-8 183 136)"/>
+  </g>
+
+  <!-- Eye: white sclera + dark pupil — only light element on face -->
+  <g id="eye">
+    <circle cx="169" cy="76" r="8"
+            fill="white" stroke="#3D1F0D" stroke-width="1.5"/>
+    <circle cx="171" cy="76" r="5" fill="#3D1F0D"/>
+    <circle cx="173" cy="74" r="2" fill="white" opacity="0.75"/>
+  </g>
+
+  <!-- Spoon: brandished upward and forward in front paw -->
+  <g id="spoon">
+    <line x1="193" y1="130" x2="205" y2="98"
+          stroke="#C8C8C8" stroke-width="5" stroke-linecap="round"/>
+    <ellipse cx="205" cy="94" rx="10" ry="7"
+             fill="#E0E0E0" stroke="#C8C8C8" stroke-width="1.5"
+             transform="rotate(-20 205 94)"/>
+    <ellipse cx="204" cy="93" rx="5" ry="3.5"
+             fill="#C8C8C8" opacity="0.6"
+             transform="rotate(-20 204 93)"/>
+  </g>
+
+</svg>

@@ -76,20 +76,21 @@ object Audio:
     val audio = js.Dynamic.newInstance(g.Audio)(s"assets/sounds/phonics/$letter.mp3")
     audio.play()
 
-  // Play the phonics MP3, then speak the word via TTS once the clip ends
+  // Play the phonics MP3, then after a short delay speak the word with praise via TTS.
+  // Uses setTimeout rather than the 'ended' event, which is unreliable for short clips.
   def playPhonicsAndWord(letter: Char, word: String): Unit =
     Music.duck(4.0)
     g.speechSynthesis.cancel()
     val audio = js.Dynamic.newInstance(g.Audio)(s"assets/sounds/phonics/$letter.mp3")
-    val cb: js.Function1[js.Any, Unit] = (_: js.Any) =>
-      val utterance = js.Dynamic.newInstance(g.SpeechSynthesisUtterance)(word)
+    audio.play()
+    val speak: js.Function0[Unit] = () =>
+      val utterance = js.Dynamic.newInstance(g.SpeechSynthesisUtterance)(s"$word! Well done!")
       utterance.lang   = "en-GB"
       utterance.rate   = 0.75
       utterance.pitch  = 1.1
       utterance.volume = 1.0
       g.speechSynthesis.speak(utterance)
-    audio.addEventListener("ended", cb)
-    audio.play()
+    g.setTimeout(speak, 1200)
 
 // ── Palette ──────────────────────────────────────────────────────────────────
 

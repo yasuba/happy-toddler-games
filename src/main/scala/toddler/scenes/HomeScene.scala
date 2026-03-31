@@ -204,15 +204,26 @@ object HomeScene extends Scene[Unit, Model, Unit]:
           ChickenScene.drawChicken(icx, iconCy + 10, facingRight = true, scale = 0.5)
 
         case 3 =>
-          val fontSize = (cardH * 0.40).toInt.min(150)
+          // Tic-tac-toe grid with X and O — matches tictactoe.svg design
+          val gs  = 64                            // grid size px
+          val cs  = gs / 3                        // cell size
+          val gx  = icx - gs / 2                 // grid left edge
+          val gy  = iconCy - gs / 2              // grid top edge
+          val mg  = 4                             // mark margin within cell
+          val gc  = RGBA(0.545, 0.353, 0.235, 1.0)  // grid brown
+          val xc  = RGBA(0.624, 0.882, 0.796, 1.0)  // X mint
+          val oc  = RGBA(0.808, 0.796, 0.965, 1.0)  // O lavender
           List(
-            TextBox("TicTacToe")
-              .bold
-              .withFontSize(Pixels(fontSize))
-              .withColor(RGBA(0.388, 0.220, 0.024, 0.80))
-              .alignCenter
-              .withSize(Size(cardW, fontSize + 12))
-              .moveTo(Point(cx, iconCy - fontSize / 2))
+            // Grid lines
+            Shape.Line(Point(gx + cs,   gy),      Point(gx + cs,   gy + gs), Stroke(3, gc)),
+            Shape.Line(Point(gx + cs*2, gy),      Point(gx + cs*2, gy + gs), Stroke(3, gc)),
+            Shape.Line(Point(gx,   gy + cs),   Point(gx + gs, gy + cs),   Stroke(3, gc)),
+            Shape.Line(Point(gx,   gy + cs*2), Point(gx + gs, gy + cs*2), Stroke(3, gc)),
+            // X in top-left cell
+            Shape.Line(Point(gx + mg,      gy + mg),      Point(gx + cs - mg, gy + cs - mg), Stroke(4, xc)),
+            Shape.Line(Point(gx + cs - mg, gy + mg),      Point(gx + mg,      gy + cs - mg), Stroke(4, xc)),
+            // O in centre cell
+            Shape.Circle(Point(gx + cs + cs/2, gy + cs + cs/2), cs/2 - mg, Fill.None, Stroke(4, oc))
           )
 
         case _ =>

@@ -272,7 +272,7 @@ object ChickenScene extends Scene[Unit, Model, Unit]:
           (ck.copy(phase = ChickenPhase.Pausing(next)), None, false)
 
       case ChickenPhase.Waddling =>
-        val sv = steerAroundEggs(ck.pos, ck.vel, eggs)
+        val sv = ck.vel
         var x = ck.pos.x + sv.x * dt; var y = ck.pos.y + sv.y * dt
         var vx = sv.x;                var vy = sv.y
 
@@ -402,13 +402,15 @@ object ChickenScene extends Scene[Unit, Model, Unit]:
 
   // ── Drawing ───────────────────────────────────────────────────────────────
 
-  private val BodyColor  = RGBA(0.961, 0.769, 0.702, 1.0)
-  private val BodyShade  = RGBA(0.878, 0.659, 0.580, 1.0)
-  private val CombColor  = RGBA(0.878, 0.333, 0.333, 1.0)
-  private val BeakColor  = RGBA(0.980, 0.780, 0.459, 1.0)
-  private val EyeColor   = RGBA(0.239, 0.122, 0.051, 1.0)
-  private val LegColor   = RGBA(0.780, 0.502, 0.251, 1.0)
-  private val MouthColor = RGBA(0.180, 0.080, 0.020, 1.0)
+  private val BodyColor    = RGBA(0.961, 0.769, 0.702, 1.0)   // #F5C4B3
+  private val BodyShade    = RGBA(0.910, 0.659, 0.596, 1.0)   // #E8A898
+  private val BellyColor   = RGBA(0.992, 0.965, 0.933, 1.0)   // #FDF6EE
+  private val CombColor    = RGBA(0.878, 0.333, 0.333, 1.0)   // #E05555
+  private val BeakColor    = RGBA(0.980, 0.780, 0.459, 1.0)   // #FAC775
+  private val EyeColor     = RGBA(0.239, 0.122, 0.051, 1.0)   // #3D1F0D
+  private val LegColor     = RGBA(0.980, 0.780, 0.459, 1.0)   // #FAC775
+  private val OutlineColor = RGBA(0.545, 0.353, 0.235, 1.0)   // #8B5A3C
+  private val MouthColor   = RGBA(0.180, 0.080, 0.020, 1.0)
 
   def drawChicken(
     cx: Int, cy: Int, facingRight: Boolean,
@@ -419,61 +421,136 @@ object ChickenScene extends Scene[Unit, Model, Unit]:
     beakOpen:  Int    = 0,
     wingFlare: Int    = 0
   ): List[SceneNode] =
-    val d = if facingRight then 1 else -1
-    def s(n: Int): Int   = (n * scale).toInt
-    def px(dx: Int): Int = cx + s(dx) * d
+    val d  = if facingRight then 1 else -1
+    def s(n: Int): Int = (n * scale).toInt
+    val sw = (2.0 * scale).max(1.0).toInt
 
     val bodyCx = cx + (waddleAmt * 3.0 * scale).toInt * d
     val bodyCy = cy - (Math.abs(waddleAmt) * 2.0 * scale).toInt + squatY
 
-    val headCx = bodyCx + s(10) * d
-    val headCy = bodyCy - s(35) + headBobY
+    val headCx = bodyCx + s(19) * d
+    val headCy = bodyCy - s(46) + headBobY
 
     val swing    = (waddleAmt * s(5)).toInt
-    val fwdEndX  = bodyCx + s(6)  * d - swing * d
-    val backEndX = bodyCx - s(10) * d + swing * d
+    val fwdTopX  = bodyCx + s(10) * d
+    val backTopX = bodyCx - s(10) * d
+    val fwdEndX  = fwdTopX  - swing * d
+    val backEndX = backTopX + swing * d
+    val footY    = bodyCy + s(58)
 
-    val beakW     = s(13).max(2)
-    val beakBaseY = headCy - s(5)
-    val beakX     = if facingRight then headCx + s(18) else headCx - s(18) - beakW
+    // ── Tail feathers ────────────────────────────────────────────────────────
+    // Pointed-oval polygons; body is drawn on top and covers the base halves
+    def makeFeather(tipX: Int, tipY: Int, baseX: Int, baseY: Int): SceneNode =
+      Shape.Polygon(
+        Batch(
+          Point(tipX,          tipY),
+          Point(baseX + s(4),  baseY - s(4)),
+          Point(baseX + s(7),  baseY),
+          Point(baseX,         baseY + s(4)),
+          Point(baseX - s(7),  baseY),
+          Point(baseX - s(4),  baseY - s(4))
+        ),
+        Fill.Color(BodyColor),
+        Stroke(sw, OutlineColor)
+      )
+    val tailNodes = List(
+      makeFeather(bodyCx - s(63)*d, bodyCy - s(43), bodyCx - s(25)*d, bodyCy - s(19)),
+      makeFeather(bodyCx - s(62)*d, bodyCy - s(35), bodyCx - s(28)*d, bodyCy - s(5)),
+      makeFeather(bodyCx - s(61)*d, bodyCy - s(26), bodyCx - s(31)*d, bodyCy + s(8)),
+      makeFeather(bodyCx - s(57)*d, bodyCy - s(17), bodyCx - s(33)*d, bodyCy + s(21))
+    )
 
-    val sw        = (2.0 * scale).max(1.0).toInt
-    val nearWingY = bodyCy + s(14) - (Math.abs(waddleAmt) * 2.0 * scale).toInt
-    val farWingX  = bodyCx - (s(22) + wingFlare) * d
-    val nearWingX = bodyCx + (s(24) + wingFlare) * d
+    // ── Body + belly ─────────────────────────────────────────────────────────
+    val body  = Shape.Circle(Point(bodyCx, bodyCy), s(44).max(1), Fill.Color(BodyColor), Stroke(sw, OutlineColor))
+    val belly = Shape.Circle(Point(bodyCx + s(4)*d, bodyCy + s(5)), s(28).max(1), Fill.Color(BellyColor))
 
+    // ── Wings: 8-point oval polygons tucked against body sides ───────────────
+    def makeWing(wx: Int, wy: Int, hw: Int, hh: Int): SceneNode =
+      Shape.Polygon(
+        Batch(
+          Point(wx,        wy - hh),
+          Point(wx + hw/2, wy - hh/2),
+          Point(wx + hw,   wy),
+          Point(wx + hw/2, wy + hh/2),
+          Point(wx,        wy + hh),
+          Point(wx - hw/2, wy + hh/2),
+          Point(wx - hw,   wy),
+          Point(wx - hw/2, wy - hh/2)
+        ),
+        Fill.Color(BodyShade),
+        Stroke(sw, OutlineColor)
+      )
+    val wingBack  = makeWing(bodyCx - (s(36) + wingFlare)*d, bodyCy + s(6), s(8), s(19))
+    val wingFront = makeWing(bodyCx + (s(36) + wingFlare)*d, bodyCy + s(6), s(8), s(19))
+
+    // ── Legs: shaft + fanned toes (3 forward, 1 back) ────────────────────────
+    def makeToes(endX: Int): List[SceneNode] =
+      val ts = Stroke(s(3).max(1), LegColor)
+      List(
+        Shape.Line(Point(endX, footY), Point(endX + s(11)*d, footY + s(6)), ts),
+        Shape.Line(Point(endX, footY), Point(endX + s(7)*d,  footY + s(5)), ts),
+        Shape.Line(Point(endX, footY), Point(endX + s(3)*d,  footY + s(4)), ts),
+        Shape.Line(Point(endX, footY), Point(endX - s(6)*d,  footY + s(5)), ts)
+      )
+    val legNodes =
+      List(
+        Shape.Line(Point(fwdTopX,  bodyCy + s(43)), Point(fwdEndX,  footY), Stroke(s(4).max(1), LegColor)),
+        Shape.Line(Point(backTopX, bodyCy + s(43)), Point(backEndX, footY), Stroke(s(4).max(1), LegColor))
+      ) ::: makeToes(fwdEndX) ::: makeToes(backEndX)
+
+    // ── Comb: 3 circles drawn before head so the head covers their lower halves
+    val combNodes = List(
+      Shape.Circle(Point(headCx - s(9)*d,  headCy - s(26)), s(9).max(1),  Fill.Color(CombColor)),
+      Shape.Circle(Point(headCx + s(2)*d,  headCy - s(32)), s(10).max(1), Fill.Color(CombColor)),
+      Shape.Circle(Point(headCx + s(13)*d, headCy - s(26)), s(9).max(1),  Fill.Color(CombColor))
+    )
+
+    // ── Head ─────────────────────────────────────────────────────────────────
+    val head = Shape.Circle(Point(headCx, headCy), s(27).max(1), Fill.Color(BodyColor), Stroke(sw, OutlineColor))
+
+    // ── Beak: triangle pointing toward facing direction ───────────────────────
+    val beakBaseX = headCx + s(22)*d
+    val beakTipX  = headCx + s(42)*d
     val beakNodes: List[SceneNode] =
       if beakOpen <= 0 then
-        List(Shape.Box(Rectangle(beakX, beakBaseY, beakW, s(8).max(2)), Fill.Color(BeakColor)))
-      else
-        val halfH = s(4).max(1)
         List(
-          Shape.Box(Rectangle(beakX, beakBaseY,                    beakW, halfH),     Fill.Color(BeakColor)),
-          Shape.Box(Rectangle(beakX, beakBaseY + halfH,            beakW, beakOpen),  Fill.Color(MouthColor)),
-          Shape.Box(Rectangle(beakX, beakBaseY + halfH + beakOpen, beakW, halfH),     Fill.Color(BeakColor))
+          Shape.Polygon(
+            Batch(Point(beakBaseX, headCy - s(5)), Point(beakBaseX, headCy + s(5)), Point(beakTipX, headCy)),
+            Fill.Color(BeakColor),
+            Stroke(sw, OutlineColor)
+          )
+        )
+      else
+        val gapX = beakTipX.min(beakBaseX)
+        val gapW = (beakTipX - beakBaseX).abs
+        List(
+          Shape.Polygon(
+            Batch(Point(beakBaseX, headCy - s(5)), Point(beakBaseX, headCy), Point(beakTipX, headCy - beakOpen/2)),
+            Fill.Color(BeakColor)
+          ),
+          Shape.Box(Rectangle(gapX, headCy - beakOpen/2, gapW, beakOpen), Fill.Color(MouthColor)),
+          Shape.Polygon(
+            Batch(Point(beakBaseX, headCy + beakOpen), Point(beakBaseX, headCy + s(5) + beakOpen), Point(beakTipX, headCy + beakOpen/2)),
+            Fill.Color(BeakColor)
+          )
         )
 
-    List(
-      Shape.Circle(Point(farWingX,  bodyCy + s(10)), s(24).max(1), Fill.Color(BodyShade)),
-      Shape.Circle(Point(nearWingX, nearWingY),       s(22).max(1), Fill.Color(BodyShade)),
-      Shape.Circle(Point(bodyCx, bodyCy), s(44).max(1), Fill.Color(BodyColor), Stroke(sw, BodyShade)),
-      Shape.Circle(Point(bodyCx + s(6) * d, bodyCy + s(10)), s(26).max(1),
-                   Fill.Color(RGBA(0.996, 0.965, 0.933, 1.0))),
-      Shape.Circle(Point(bodyCx + s(4)  * d, bodyCy - s(2)),  s(9).max(1),
-                   Fill.Color(RGBA(0.988, 0.941, 0.898, 1.0))),
-      Shape.Circle(Point(bodyCx + s(14) * d, bodyCy + s(10)), s(8).max(1),
-                   Fill.Color(RGBA(0.988, 0.941, 0.898, 1.0))),
-      Shape.Circle(Point(bodyCx + s(3)  * d, bodyCy + s(20)), s(8).max(1),
-                   Fill.Color(RGBA(0.988, 0.941, 0.898, 1.0))),
-      Shape.Circle(Point(headCx, headCy), s(22).max(1), Fill.Color(BodyColor), Stroke(sw, BodyShade)),
-      Shape.Circle(Point(headCx + s(2)  * d, headCy - s(20)), s(6).max(1), Fill.Color(CombColor)),
-      Shape.Circle(Point(headCx + s(8)  * d, headCy - s(24)), s(8).max(1), Fill.Color(CombColor)),
-      Shape.Circle(Point(headCx + s(14) * d, headCy - s(19)), s(6).max(1), Fill.Color(CombColor)),
-      Shape.Circle(Point(headCx + s(20) * d, headCy + s(8)),  s(6).max(1), Fill.Color(CombColor)),
-      Shape.Circle(Point(headCx + s(13) * d, headCy - s(4)),  s(4).max(1), Fill.Color(EyeColor)),
-      Shape.Circle(Point(headCx + s(14) * d, headCy - s(6)),  s(1).max(1), Fill.Color(RGBA(1,1,1,0.75))),
-      Shape.Line(Point(bodyCx + s(6)  * d, bodyCy + s(43)), Point(fwdEndX,  bodyCy + s(58)), Stroke(s(4).max(1), LegColor)),
-      Shape.Line(Point(bodyCx - s(10) * d, bodyCy + s(43)), Point(backEndX, bodyCy + s(58)), Stroke(s(4).max(1), LegColor)),
-      Shape.Line(Point(fwdEndX  - s(5), bodyCy + s(58)), Point(fwdEndX  + s(9), bodyCy + s(58)), Stroke(s(3).max(1), LegColor)),
-      Shape.Line(Point(backEndX - s(9), bodyCy + s(58)), Point(backEndX + s(5), bodyCy + s(58)), Stroke(s(3).max(1), LegColor)),
-    ) ::: beakNodes
+    // ── Wattle: small red oval below the beak ────────────────────────────────
+    val wattle = Shape.Circle(Point(headCx + s(24)*d, headCy + s(11)), s(6).max(1), Fill.Color(CombColor))
+
+    // ── Eye + smile ──────────────────────────────────────────────────────────
+    val eyeX = headCx + s(12)*d
+    val eyeY = headCy - s(6)
+    val faceNodes = List(
+      Shape.Circle(Point(eyeX,          eyeY),      s(5).max(1), Fill.Color(EyeColor)),
+      Shape.Circle(Point(eyeX + s(2)*d, eyeY - s(2)), s(2).max(1), Fill.Color(RGBA(1.0, 1.0, 1.0, 0.85)))
+    )
+
+    tailNodes :::
+    List(body, belly, wingBack, wingFront) :::
+    legNodes :::
+    combNodes :::
+    List(head) :::
+    beakNodes :::
+    List(wattle) :::
+    faceNodes
