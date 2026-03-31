@@ -1,5 +1,5 @@
 const BASE = self.location.pathname.replace(/\/sw\.js$/, '');
-const CACHE_NAME = 'happy-toddler-games-v2';
+const CACHE_NAME = 'happy-toddler-games-v3';
 
 const ASSETS = [
   BASE + '/',
