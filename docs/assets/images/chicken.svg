@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+<g transform="translate(0, -10)">
+
+  <!-- Tail: three feather-shaped ellipses fanning upper-left, drawn behind body -->
+  <g id="tail">
+    <ellipse cx="44" cy="97" rx="8" ry="22"
+             fill="#F5C4B3" stroke="#8B5A3C" stroke-width="2"
+             transform="rotate(-56 44 97)"/>
+    <ellipse cx="43" cy="108" rx="8" ry="22"
+             fill="#F5C4B3" stroke="#8B5A3C" stroke-width="2"
+             transform="rotate(-48 43 108)"/>
+    <ellipse cx="42" cy="119" rx="8" ry="22"
+             fill="#F5C4B3" stroke="#8B5A3C" stroke-width="2"
+             transform="rotate(-40 42 119)"/>
+    <ellipse cx="43" cy="130" rx="8" ry="22"
+             fill="#F5C4B3" stroke="#8B5A3C" stroke-width="2"
+             transform="rotate(-30 43 130)"/>
+  </g>
+
+  <!-- Body: main plump ellipse + lighter belly -->
+  <g id="body">
+    <ellipse cx="97" cy="128" rx="53" ry="45"
+             fill="#F5C4B3" stroke="#8B5A3C" stroke-width="2"/>
+    <ellipse cx="101" cy="133" rx="31" ry="28"
+             fill="#FDF6EE" stroke="#8B5A3C" stroke-width="1.5"/>
+  </g>
+
+  <!-- Left wing: small ellipse tucked against left side of body -->
+  <g id="left-wing">
+    <ellipse cx="55" cy="132" rx="12" ry="19"
+             fill="#E8A898" stroke="#8B5A3C" stroke-width="2"
+             transform="rotate(-12 55 132)"/>
+  </g>
+
+  <!-- Right wing: small ellipse tucked against right side of body -->
+  <g id="right-wing">
+    <ellipse cx="139" cy="132" rx="12" ry="19"
+             fill="#E8A898" stroke="#8B5A3C" stroke-width="2"
+             transform="rotate(12 139 132)"/>
+  </g>
+
+  <!-- Left leg -->
+  <g id="left-leg">
+    <line x1="87" y1="171" x2="83" y2="186" stroke="#FAC775" stroke-width="4" stroke-linecap="round"/>
+    <!-- 3 forward toes (right) + 1 back toe (left) -->
+    <line x1="83" y1="186" x2="95" y2="193" stroke="#FAC775" stroke-width="3" stroke-linecap="round"/>
+    <line x1="83" y1="186" x2="91" y2="192" stroke="#FAC775" stroke-width="3" stroke-linecap="round"/>
+    <line x1="83" y1="186" x2="87" y2="191" stroke="#FAC775" stroke-width="3" stroke-linecap="round"/>
+    <line x1="83" y1="186" x2="74" y2="192" stroke="#FAC775" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- Right leg -->
+  <g id="right-leg">
+    <line x1="107" y1="171" x2="111" y2="186" stroke="#FAC775" stroke-width="4" stroke-linecap="round"/>
+    <!-- 3 forward toes (right) + 1 back toe (left) -->
+    <line x1="111" y1="186" x2="123" y2="193" stroke="#FAC775" stroke-width="3" stroke-linecap="round"/>
+    <line x1="111" y1="186" x2="119" y2="192" stroke="#FAC775" stroke-width="3" stroke-linecap="round"/>
+    <line x1="111" y1="186" x2="115" y2="191" stroke="#FAC775" stroke-width="3" stroke-linecap="round"/>
+    <line x1="111" y1="186" x2="102" y2="192" stroke="#FAC775" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- Comb: three red circles drawn before head so head covers their lower halves -->
+  <g id="comb">
+    <circle cx="107" cy="56" r="10" fill="#E05555" stroke="#8B5A3C" stroke-width="2"/>
+    <circle cx="118" cy="50" r="11" fill="#E05555" stroke="#8B5A3C" stroke-width="2"/>
+    <circle cx="129" cy="56" r="10" fill="#E05555" stroke="#8B5A3C" stroke-width="2"/>
+  </g>
+
+  <!-- Head: covers the lower portions of the comb circles -->
+  <g id="head">
+    <circle cx="116" cy="82" r="27" fill="#F5C4B3" stroke="#8B5A3C" stroke-width="2"/>
+  </g>
+
+  <!-- Beak: short triangle pointing right -->
+  <g id="beak">
+    <polygon points="138,77 138,87 158,82"
+             fill="#FAC775" stroke="#8B5A3C" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Wattle: small red oval hanging below the beak -->
+  <g id="wattle">
+    <ellipse cx="140" cy="93" rx="6" ry="8"
+             fill="#E05555" stroke="#8B5A3C" stroke-width="2"/>
+  </g>
+
+  <!-- Eye: dark dot with a shine -->
+  <g id="eye">
+    <circle cx="128" cy="76" r="5" fill="#3D1F0D"/>
+    <circle cx="130" cy="74" r="2" fill="white" opacity="0.85"/>
+  </g>
+
+</g>
+</svg>
